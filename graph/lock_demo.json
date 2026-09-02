@@ -1,0 +1,64 @@
+{
+    "nodes": [
+        {
+            "id": "lock_probe_a",
+            "uuid": "5a0c4e1d-2b7f-4c93-9e61-000000001001",
+            "name": "锁探针 A",
+            "parent": null,
+            "type": "device",
+            "template_name": "lock_probe_demo",
+            "sites_initialized": true,
+            "sites": [],
+            "pose": {
+                "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "config": {},
+            "data": {}
+        },
+        {
+            "id": "lock_probe_b",
+            "uuid": "5a0c4e1d-2b7f-4c93-9e61-000000001002",
+            "name": "锁探针 B",
+            "parent": null,
+            "type": "device",
+            "template_name": "lock_probe_demo",
+            "sites_initialized": true,
+            "sites": [],
+            "pose": {
+                "position": {
+                    "x": 300,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "config": {},
+            "data": {}
+        },
+        {
+            "id": "lock_auditor",
+            "uuid": "5a0c4e1d-2b7f-4c93-9e61-000000001003",
+            "name": "锁审计器",
+            "parent": null,
+            "type": "device",
+            "template_name": "lock_auditor_demo",
+            "sites_initialized": true,
+            "sites": [],
+            "pose": {
+                "position": {
+                    "x": 600,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "config": {
+                "probes": ["lock_probe_a", "lock_probe_b"]
+            },
+            "data": {}
+        }
+    ],
+    "links": []
+}
