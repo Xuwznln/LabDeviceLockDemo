@@ -68,3 +68,36 @@ def test_smoke_rejects_ambiguous_template_name(monkeypatch):
     monkeypatch.setattr(smoke, "_api_request", api)
     with pytest.raises(AssertionError, match="重复"):
         smoke._find_workflow(8002, name, time.monotonic() + 2)
+
+
+def test_readiness_retries_while_host_attaches(monkeypatch):
+    """统一 Core 默认拓扑：Host 子进程接入控制面前，Host 专有路由返回业务码 5001，继续轮询。"""
+
+    endpoint = "/runtime/endpoints?state=online&limit=100"
+    calls = []
+
+    def api(port, path):
+        calls.append(path)
+        if path == "/health":
+            return {"status": "ok", "execution": "ready"}
+        assert path == endpoint
+        if calls.count(endpoint) == 1:
+            raise smoke.ManagementAPIError(path, {"code": 5001, "error": {"msg": "Host 执行进程暂不可用"}})
+        return [{"action_capabilities": [{"action_name": name} for name in ["prepare_plates","occupy","process_plate","audit"]]}]
+
+    monkeypatch.setattr(smoke, "_api_request", api)
+    monkeypatch.setattr(smoke.time, "sleep", lambda _: None)
+    smoke._wait_management_api(8002, SimpleNamespace(poll=lambda: None), time.monotonic() + 2)
+    assert calls.count(endpoint) == 2
+
+
+def test_readiness_surfaces_other_api_errors(monkeypatch):
+    def api(port, path):
+        if path == "/health":
+            return {"status": "ok", "execution": "ready"}
+        raise smoke.ManagementAPIError(path, {"code": 1002, "error": {"msg": "unauthorized"}})
+
+    monkeypatch.setattr(smoke, "_api_request", api)
+    monkeypatch.setattr(smoke.time, "sleep", lambda _: None)
+    with pytest.raises(smoke.ManagementAPIError, match="1002"):
+        smoke._wait_management_api(8002, SimpleNamespace(poll=lambda: None), time.monotonic() + 2)
