@@ -37,8 +37,23 @@ preemption — contention is resolved by the unified scheduler's FIFO queue.
 
 ## Install from GitHub
 
+Requires the unified Uni-Lab-OS core (dev architecture with the V1.0 HTTP API) on
+**CPython 3.14**, plus its companion wheels: the maintained PyLabRobot fork
+`1.0.0b1+unilabos…` and `opentrons-shared-data 10.1.0+unilabos.np2.1`. Build them with the
+core's `scripts/build_wheel_release.py --dependencies-only` and install with `--find-links`.
+ROS 2 runs use RoboStack Jazzy built for cp314 (`ros2-distro-mutex` 0.20).
+
+With a Host running (`unilab --backend hostlink`), install through its management API. The
+spec is the GitHub URL with an optional `@<commit-sha>`:
+
 ```bash
-unilab package install https://github.com/Xuwznln/LabDeviceLockDemo --ref <commit-sha>
+unilab package install https://github.com/Xuwznln/LabDeviceLockDemo@<commit-sha> --wait
+```
+
+Or install the distribution into the current Python environment (this is what CI does):
+
+```bash
+python -m pip install "git+https://github.com/Xuwznln/LabDeviceLockDemo@<commit-sha>"
 ```
 
 For local development:
@@ -63,7 +78,8 @@ reports the `@workflow` templates to the local Workflow Authority) and replays
 what the web UI does when you click "run" several times in a row:
 
 1. **"锁演示：准备物料"**: `lock_probe_a.prepare_plates` idempotently `ensure`s two
-   plates P1 / P2 with fixed authority uuids (the lock objects).
+   plates P1 / P2 with fixed authority uuids (the lock objects). Wells follow PyLabRobot
+   1.0 naming and are prefixed with their plate (`lock_plate_P1_well_A1`).
 2. **Action-lock group** — four tasks created back to back:
    `occupy-1`, `occupy-2` (`lock_probe_a/occupy`, 1.5 s each) and `peek-1`,
    `peek-2` (`lock_probe_a/peek`, 1.0 s each). While `occupy-1` holds the lock,
@@ -98,7 +114,8 @@ python -m unilabos --backend ros2 --disable_hostlink --skip_env_check \
 
 Then open the management UI, run "锁演示：准备物料" once, click "run" on the two
 occupy workflows and the two peek workflows in quick succession, and watch
-`/api/v1/scheduler/resources` while they execute.
+`/api/v1/scheduler/resources` while they execute (the V1 envelope `{"code": 0, "data": {"requests": [...]}}`).
+Writes to the management API need the control token in the `X-UniLab-Token` header.
 
 ## Layout
 

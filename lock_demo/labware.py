@@ -31,8 +31,10 @@ def lock_demo_plate(name: str) -> Plate:
         size_z=14.0,
         lid=None,
         model="lock_demo_plate",
+        # PLR 1.0：孔位以板名为前缀命名（lock_plate_P1_well_A1），两块板同在权威里也不重名。
         ordered_items=create_ordered_items_2d(
             Well,
+            name_prefix=name,
             num_items_x=2,
             num_items_y=1,
             dx=20.0,

@@ -25,8 +25,21 @@
 
 ## 从 GitHub 安装
 
+需要统一版 Uni-Lab-OS 核心（dev 架构 + V1.0 HTTP API），仅支持 **CPython 3.14**；配套 wheel
+（PyLabRobot 维护分支 `1.0.0b1+unilabos…` 与 `opentrons-shared-data 10.1.0+unilabos.np2.1`）
+用核心的 `scripts/build_wheel_release.py --dependencies-only` 构建，安装时经 `--find-links` 提供。
+ROS 2 运行使用为 cp314 构建的 RoboStack Jazzy（`ros2-distro-mutex` 0.20）。
+
+Host 运行时（`unilab --backend hostlink`）经管理 API 安装，来源是 GitHub 地址，可附 `@<commit-sha>`：
+
 ```bash
-unilab package install https://github.com/Xuwznln/LabDeviceLockDemo --ref <commit-sha>
+unilab package install https://github.com/Xuwznln/LabDeviceLockDemo@<commit-sha> --wait
+```
+
+也可以直接装进当前 Python 环境（CI 即如此）：
+
+```bash
+python -m pip install "git+https://github.com/Xuwznln/LabDeviceLockDemo@<commit-sha>"
 ```
 
 本地开发可使用：
@@ -50,6 +63,7 @@ smoke 启动真实运行时（`unilab -g graph/lock_demo.json`，启动时把 `@
 Workflow Authority），然后复现"网页上连点几次运行"：
 
 1. **「锁演示：准备物料」**：`lock_probe_a.prepare_plates` 按固定权威 uuid 幂等 `ensure` 两块板 P1 / P2（锁对象）。
+   孔位按 PyLabRobot 1.0 规则以板名为前缀命名（`lock_plate_P1_well_A1`）。
 2. **动作锁组**——四个任务背靠背创建：`occupy-1`、`occupy-2`（`lock_probe_a/occupy`，各 1.5 s）和
    `peek-1`、`peek-2`（`lock_probe_a/peek`，各 1.0 s）。`occupy-1` 持锁期间，
    `GET /api/v1/scheduler/resources` 里 `occupy-2` 为 `waiting`、身份是 `action`、`blockers` 非空；
@@ -78,7 +92,8 @@ python -m unilabos --backend ros2 --disable_hostlink --skip_env_check \
 ```
 
 然后打开管理页面：先运行一次「锁演示：准备物料」，再快速连点两个 occupy 工作流和两个 peek
-工作流的"运行"，执行期间观察 `/api/v1/scheduler/resources`。
+工作流的"运行"，执行期间观察 `/api/v1/scheduler/resources`（V1 信封 `{"code": 0, "data": {"requests": [...]}}`）。
+管理 API 的写请求需在 `X-UniLab-Token` 请求头携带控制面 token。
 
 ## 目录
 

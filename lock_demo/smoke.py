@@ -170,6 +170,21 @@ def _base_command(repo_root: Path, database_root: Path, management_port: int, ba
     return command
 
 
+#: 统一 Core 的业务码：Host 子进程尚未接入控制面（启动 / 安静点重启）时，Host 专有路由
+#: （如 ``/runtime/endpoints``）返回 HTTP 200 + ``{"code": 5001}``，就绪等待应继续轮询。
+SERVICE_UNAVAILABLE = 5001
+
+
+class ManagementAPIError(RuntimeError):
+    """管理 API 返回了非 0 业务码（V1 信封 ``{"code", "error": {"msg"}}``）。"""
+
+    def __init__(self, path: str, body: dict[str, Any]) -> None:
+        super().__init__(f"管理 API {path} 返回错误: {body}")
+        self.path = path
+        self.code = body.get("code")
+        self.body = body
+
+
 def _api_request(port: int, path: str, payload: dict[str, Any] | None = None) -> Any:
     """请求管理 API；workflow 风格 {"code":0,"data":...} 自动解包，诊断路由原样返回。"""
 
@@ -182,7 +197,7 @@ def _api_request(port: int, path: str, payload: dict[str, Any] | None = None) ->
         body = json.loads(response.read().decode("utf-8"))
     if isinstance(body, dict) and "code" in body:
         if body["code"] != 0:
-            raise RuntimeError(f"管理 API {path} 返回错误: {body}")
+            raise ManagementAPIError(path, body)
         return body.get("data")
     return body
 
@@ -207,6 +222,10 @@ def _wait_management_api(port: int, process: subprocess.Popen[Any], deadline: fl
                 and {"prepare_plates","occupy","process_plate","audit"} <= actions
             ):
                 return
+        except ManagementAPIError as error:
+            # 默认拓扑里 Host 是调度权威的子进程，接入控制面前 Host 专有路由返回 5001
+            if error.code != SERVICE_UNAVAILABLE:
+                raise
         except (urllib.error.URLError, OSError):
             pass
         time.sleep(0.3)
@@ -255,7 +274,7 @@ def _await(port: int, submitted: dict[str, Any], deadline: float) -> dict[str, A
             break
         # 本演示的动作都不该失败：一旦某个 attempt 被挂进错误决策链，立刻带报文失败，不空等超时
         held = [
-            item for item in _api_request(port, "/error-decisions")["items"] if item.get("task_id") == task_uuid
+            item for item in _api_request(port, "/error-decisions")["decisions"] if item.get("task_id") == task_uuid
         ]
         if held:
             raise AssertionError(f"任务 {submitted['workflow_name']!r} 的 attempt 进入了错误决策链: {held[0]}")
