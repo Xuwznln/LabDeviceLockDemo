@@ -22,7 +22,8 @@ What it demonstrates (all through the web-style workflow submission path,
   different actions never conflict — the evidence for `always_free` has to be
   two calls of the *same* action running side by side;
 - **Material lock** (`process_plate`, `@action(always_free=True,
-  materials_need_lock=["plate"])`): the only lock is the authority-issued
+  placeholder_keys={"plate": "unilabos_resources"})`): `plate` is a material
+  parameter, and material parameters are always locked. The only lock is the authority-issued
   `material_uuid` of the `plate` argument. Device A and device B processing the
   same plate P1 run one after the other (B is queued behind a `material`
   identifier), while device A processing P1 and P2 at the same time overlaps —

@@ -172,7 +172,7 @@ def process_p1_on_a(ctx: WorkflowBuildContext) -> None:
         "lock_probe_a/process_plate",
         {"plate": {"uuid": PLATE_P1_UUID}, "tag": "a-p1", "duration_s": HOLD_SECONDS},
         name="A 处理 P1",
-        description="materials_need_lock=[\"plate\"]：按 P1 的权威 uuid 申请物料锁并持有 1.5s。",
+        description="plate 是物料参数：按 P1 的权威 uuid 申请物料锁并持有 1.5s。",
     )
 
 
