@@ -6,9 +6,10 @@ finished_at}``。三种动作只差在锁声明上：
 - ``occupy``：普通动作。调度器为它隐式申请 ``(device_id, occupy)`` 动作锁，
   同一设备上两次 ``occupy`` 一定串行，且按提交顺序先到先得；
 - ``peek``：``always_free=True``。不申请动作锁，可以和本设备任何动作并行；
-- ``process_plate``：``always_free=True`` + ``materials_need_lock=["plate"]``。
-  不申请动作锁，但独占 ``plate`` 参数解析出的权威物料 uuid——不同设备处理同一块
-  板串行，同一设备处理不同板并行。
+- ``process_plate``：``always_free=True``，``plate`` 经 ``placeholder_keys`` 标成物料参数。
+  不申请动作锁，但物料参数一律加锁，独占 ``plate`` 解析出的权威物料 uuid——不同设备处理
+  同一块板串行，同一设备处理不同板并行。参数保持 ``{"uuid": ...}`` 引用（不用 ``ResourceSlot``
+  注解，驱动不需要 PLR 实例）。
 
 设备自身不做任何排队：并发、互斥全部由 ``BackendScheduler`` 在派发前决定，
 账本只是事后证据（由 ``lock_auditor.audit`` 核对）。
@@ -142,9 +143,9 @@ class LockProbeDemo:
 
     @action(
         display_name="处理板",
-        description="always_free + materials_need_lock=[plate]：不申请动作锁，只独占 plate 指向的权威物料",
+        description="always_free + 物料参数 plate：不申请动作锁，只独占 plate 指向的权威物料",
         always_free=True,
-        materials_need_lock=["plate"],
+        placeholder_keys={"plate": "unilabos_resources"},
         feedback_interval=1.0,
     )
     def process_plate(
@@ -168,7 +169,7 @@ class LockProbeDemo:
             "process_plate",
             tag,
             duration_s,
-            {"plate_uuid": plate_uuid, "plate_name": material.material.name},
+            {"plate_uuid": plate_uuid, "plate_name": material.material.display_name},
         )
 
     @action(
