@@ -169,7 +169,7 @@ class LockProbeDemo:
             "process_plate",
             tag,
             duration_s,
-            {"plate_uuid": plate_uuid, "plate_name": material.material.display_name or material.material.name},
+            {"plate_uuid": plate_uuid, "plate_name": material.material.display_name},
         )
 
     @action(
