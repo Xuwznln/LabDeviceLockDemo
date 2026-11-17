@@ -116,7 +116,6 @@ python -m unilabos --backend ros2 --disable_hostlink --skip_env_check \
 Then open the management UI, run "锁演示：准备物料" once, click "run" on the two
 occupy workflows and the two peek workflows in quick succession, and watch
 `/api/v1/scheduler/resources` while they execute (the V1 envelope `{"code": 0, "data": {"requests": [...]}}`).
-Writes to the management API need the control token in the `X-UniLab-Token` header.
 
 ## Layout
 
