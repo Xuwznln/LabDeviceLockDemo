@@ -6,10 +6,9 @@ finished_at}``。三种动作只差在锁声明上：
 - ``occupy``：普通动作。调度器为它隐式申请 ``(device_id, occupy)`` 动作锁，
   同一设备上两次 ``occupy`` 一定串行，且按提交顺序先到先得；
 - ``peek``：``always_free=True``。不申请动作锁，可以和本设备任何动作并行；
-- ``process_plate``：``always_free=True``，``plate`` 经 ``placeholder_keys`` 标成物料参数。
-  不申请动作锁，但物料参数一律加锁，独占 ``plate`` 解析出的权威物料 uuid——不同设备处理
-  同一块板串行，同一设备处理不同板并行。参数保持 ``{"uuid": ...}`` 引用（不用 ``ResourceSlot``
-  注解，驱动不需要 PLR 实例）。
+- ``process_plate``：``always_free=True``，``plate`` 注解为 ``ResourceSlot``（物料参数）。
+  不申请动作锁，但物料参数一律加锁，独占 ``plate`` 指向的权威物料 uuid——不同设备处理
+  同一块板串行，同一设备处理不同板并行。
 
 设备自身不做任何排队：并发、互斥全部由 ``BackendScheduler`` 在派发前决定，
 账本只是事后证据（由 ``lock_auditor.audit`` 核对）。
@@ -21,6 +20,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 from unilabos.registry.decorators import action, device, not_action, topic_config
+from unilabos.registry.placeholder_type import ResourceSlot
 
 from .labware import PLATE_UUIDS, build_lock_plate
 
@@ -145,22 +145,21 @@ class LockProbeDemo:
         display_name="处理板",
         description="always_free + 物料参数 plate：不申请动作锁，只独占 plate 指向的权威物料",
         always_free=True,
-        placeholder_keys={"plate": "unilabos_resources"},
         feedback_interval=1.0,
     )
     def process_plate(
-        self, plate: dict, tag: str = "process", duration_s: float = 1.5
+        self, plate: ResourceSlot, tag: str = "process", duration_s: float = 1.5
     ) -> Dict[str, Any]:
         """处理一块板：执行期间该板的物料锁被本 attempt 独占。
 
         Args:
-            plate[板]: 权威物料引用 ``{"uuid": material_uuid}``。
+            plate[板]: 权威物料（调用方传 ``{"uuid": material_uuid}``，框架解析成物料实例）。
             tag[标签]: 写入账本的记录标签。
             duration_s[持续秒数]: 动作持续时间。
         """
         from unilabos.resources.materials import resolve_materials_gateway
 
-        plate_uuid = str((plate or {}).get("uuid") or "").strip()
+        plate_uuid = str(getattr(plate, "unilabos_uuid", "") or "").strip()
         if not plate_uuid:
             raise ValueError("plate 必须携带权威物料 uuid")
         # 锁身份必须是权威发放的物料：这里回读权威确认它存在（不存在会抛错让 job 失败）。
