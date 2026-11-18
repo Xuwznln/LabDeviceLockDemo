@@ -14,8 +14,8 @@
 - **`always_free`**（`lock_probe_a.peek`，`@action(always_free=True)`）：不申请动作锁，
   同一台设备、同一个动作的两次 `peek` 重叠执行。动作锁的粒度是 `(device, action)`，不同动作
   本来就不互斥，所以 always_free 的证据必须是**同一个动作的两次调用并行**；
-- **物料锁**（`process_plate`，`@action(always_free=True, placeholder_keys={"plate": "unilabos_resources"})`）：
-  `plate` 标成物料参数，物料参数一律加锁。唯一的锁是 `plate` 参数解析出的权威 `material_uuid`。A、B 两台设备处理同一块 P1 串行
+- **物料锁**（`process_plate`，`@action(always_free=True)`，`plate: ResourceSlot`）：
+  `plate` 注解为物料参数，物料参数一律加锁。唯一的锁是 `plate` 参数解析出的权威 `material_uuid`。A、B 两台设备处理同一块 P1 串行
   （B 排在 `material` 身份后面），A 同时处理 P1 和 P2 则并行——锁按板互斥，不按设备；
 - **审计即工作流节点**：`lock_auditor.audit` 经点对点 `call_device_action` 读账本，四条结论
   任一不成立就抛 `AssertionError`，任务失败——绿灯就意味着语义成立。
