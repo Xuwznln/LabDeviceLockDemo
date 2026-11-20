@@ -115,7 +115,8 @@ python -m unilabos --backend ros2 --disable_hostlink --skip_env_check \
   -g ./graph/lock_demo.json
 ```
 
-Then open the management UI, run "锁演示：准备物料" once, click "run" on the two
+Then open a frontend connected to this backend (`unilab` serves no UI itself; the page at
+`http://127.0.0.1:8002/` links OpenLab), run "锁演示：准备物料" once, click "run" on the two
 occupy workflows and the two peek workflows in quick succession, and watch
 `/api/v1/scheduler/resources` while they execute (the V1 envelope `{"code": 0, "data": {"requests": [...]}}`).
 

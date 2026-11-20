@@ -92,7 +92,8 @@ python -m unilabos --backend ros2 --disable_hostlink --skip_env_check \
   -g ./graph/lock_demo.json
 ```
 
-然后打开管理页面：先运行一次「锁演示：准备物料」，再快速连点两个 occupy 工作流和两个 peek
+然后打开连接本后端的前端（`unilab` 本身不提供页面，`http://127.0.0.1:8002/` 上有 OpenLab 入口）：
+先运行一次「锁演示：准备物料」，再快速连点两个 occupy 工作流和两个 peek
 工作流的"运行"，执行期间观察 `/api/v1/scheduler/resources`（V1 信封 `{"code": 0, "data": {"requests": [...]}}`）。
 
 ## 目录
