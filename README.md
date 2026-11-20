@@ -30,7 +30,9 @@ What it demonstrates (all through the web-style workflow submission path,
   the lock is per plate, not per device;
 - **Audit as a workflow node**: `lock_auditor.audit` reads the ledgers via
   point-to-point `call_device_action` and raises `AssertionError` if any of the
-  four conclusions fails, so a green task really means the semantics held.
+  four conclusions fails, so a green task really means the semantics held. Its
+  `probe_a` / `probe_b` parameters are `DeviceSlot` (device IDs), so the editor
+  offers a device picker; they take no lock.
 
 Not covered on purpose: workflow-level locks and lock handoff between
 consecutive jobs are not wired into `@workflow` yet, and there is no priority
@@ -113,7 +115,8 @@ python -m unilabos --backend ros2 --disable_hostlink --skip_env_check \
   -g ./graph/lock_demo.json
 ```
 
-Then open the management UI, run "锁演示：准备物料" once, click "run" on the two
+Then open a frontend connected to this backend (`unilab` serves no UI itself; the page at
+`http://127.0.0.1:8002/` links OpenLab), run "锁演示：准备物料" once, click "run" on the two
 occupy workflows and the two peek workflows in quick succession, and watch
 `/api/v1/scheduler/resources` while they execute (the V1 envelope `{"code": 0, "data": {"requests": [...]}}`).
 
@@ -128,4 +131,6 @@ lock_demo/
   workflows.py                     @workflow templates (prepare, two groups, audit)
   smoke.py                         terminating real-runtime proof driven through the management API
 tests/test_hostlink_smoke.py       HostLink integration assertions
+tests/test_workflow_template_contract.py  template import contract (no runtime)
+tests/test_action_selectors.py     registry: probe parameters are DeviceSlot, the plate a locked ResourceSlot
 ```

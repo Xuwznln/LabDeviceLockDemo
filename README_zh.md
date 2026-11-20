@@ -18,7 +18,8 @@
   `plate` 注解为物料参数，物料参数一律加锁。唯一的锁是 `plate` 参数解析出的权威 `material_uuid`。A、B 两台设备处理同一块 P1 串行
   （B 排在 `material` 身份后面），A 同时处理 P1 和 P2 则并行——锁按板互斥，不按设备；
 - **审计即工作流节点**：`lock_auditor.audit` 经点对点 `call_device_action` 读账本，四条结论
-  任一不成立就抛 `AssertionError`，任务失败——绿灯就意味着语义成立。
+  任一不成立就抛 `AssertionError`，任务失败——绿灯就意味着语义成立。`probe_a` / `probe_b`
+  注解为 `DeviceSlot`（值是设备 ID），编辑器给设备选择器，不加锁。
 
 有意不覆盖：工作流级锁与相邻 job 之间的锁 handoff 尚未接入 `@workflow`；调度器没有优先级
 抢占，竞争由统一调度器的先到先得队列决定。
@@ -91,7 +92,8 @@ python -m unilabos --backend ros2 --disable_hostlink --skip_env_check \
   -g ./graph/lock_demo.json
 ```
 
-然后打开管理页面：先运行一次「锁演示：准备物料」，再快速连点两个 occupy 工作流和两个 peek
+然后打开连接本后端的前端（`unilab` 本身不提供页面，`http://127.0.0.1:8002/` 上有 OpenLab 入口）：
+先运行一次「锁演示：准备物料」，再快速连点两个 occupy 工作流和两个 peek
 工作流的"运行"，执行期间观察 `/api/v1/scheduler/resources`（V1 信封 `{"code": 0, "data": {"requests": [...]}}`）。
 
 ## 目录
@@ -105,4 +107,6 @@ lock_demo/
   workflows.py                     @workflow 模板（准备、两个并发组、审计）
   smoke.py                         经管理 API 驱动的有终止条件真实运行时证明
 tests/test_hostlink_smoke.py       HostLink 集成断言
+tests/test_workflow_template_contract.py  模板导入合同（不起运行时）
+tests/test_action_selectors.py     注册表：探针参数是 DeviceSlot，板是加物料锁的 ResourceSlot
 ```
