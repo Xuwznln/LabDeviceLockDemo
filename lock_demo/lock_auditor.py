@@ -19,6 +19,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 from unilabos.registry.decorators import action, device, not_action, topic_config
+from unilabos.registry.placeholder_type import DeviceSlot
 
 #: 默认探针节点 id（需与 graph 一致）。
 DEFAULT_PROBES = ["lock_probe_a", "lock_probe_b"]
@@ -107,14 +108,14 @@ class LockAuditorDemo:
     )
     def audit(
         self,
-        probe_a: str = "lock_probe_a",
-        probe_b: str = "lock_probe_b",
+        probe_a: DeviceSlot = "lock_probe_a",
+        probe_b: DeviceSlot = "lock_probe_b",
     ) -> Dict[str, Any]:
         """读取账本并核对锁语义。
 
         Args:
-            probe_a[探针A]: 承担动作锁 / always_free / 异板并行场景的探针节点 id。
-            probe_b[探针B]: 与 A 争同一块板的探针节点 id。
+            probe_a[探针A]: 承担动作锁 / always_free / 异板并行场景的探针设备 ID。
+            probe_b[探针B]: 与 A 争同一块板的探针设备 ID。
         """
         self._audits += 1
         records = self._collect()

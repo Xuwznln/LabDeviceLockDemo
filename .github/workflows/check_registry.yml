@@ -141,12 +141,12 @@ jobs:
           distribution = importlib.metadata.distribution("lock_demo")
           print(f"installed lock_demo {distribution.version}: {module_path}")
           PY
-      - name: Validate workflow template import contract
+      - name: Validate workflow template import contract and action selectors
         shell: bash -el {0}
         run: |
           source "$GITHUB_WORKSPACE/.ci/install/unilabos_msgs/setup.bash"
           cd "$RUNNER_TEMP"
-          python -m pytest -q "$GITHUB_WORKSPACE/tests/test_workflow_template_contract.py" --import-mode=importlib -p no:launch_testing -p no:launch_ros
+          python -m pytest -q "$GITHUB_WORKSPACE/tests/test_workflow_template_contract.py" "$GITHUB_WORKSPACE/tests/test_action_selectors.py" --import-mode=importlib -p no:launch_testing -p no:launch_ros
       - name: Validate registry and assert HostLink lock semantics
         shell: bash -el {0}
         run: |
